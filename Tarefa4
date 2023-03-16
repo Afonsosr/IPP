@@ -1,0 +1,75 @@
+class Formas:
+    def criar_superficie(self,l,a):
+        self.superficie = []
+        for n in range(0,l):
+            self.superficie.append([])
+        for elem in self.superficie:
+            for n in range(0,a):
+                elem.append(0)
+        print("superficie criada com sucesso.")
+        return self.superficie
+    
+
+    dic = {}
+    def criar_retangulo(self,nret,lret,aret):
+        self.dic[nret] = (lret,aret)
+        print(self.dic)
+       
+    def criar_circulo(self,ncir,diam):
+        self.dic[ncir] = (diam,diam)
+        print(self.dic)
+
+    area = 0
+    def inserir_forma(self,ret_a_inserir):
+        lref = int(input("introduza largura do ponto de referência: "))
+        aref = int(input("introduza altura do ponto de referência: "))
+        aux1 = self.dic[ret_a_inserir][0]
+        aux2 = self.dic[ret_a_inserir][1]
+        c = True
+        if aref+aux1<= #falta por aqui coisa# and lref+aux2<= #falta por aqui coisa# :
+            while c == True:
+                for elem in range(lref,lref+aux1):
+                    for ponto in range(aref,aref+aux2):
+                        if self.superficie[ponto][elem] == 0:
+                            self.superficie[ponto][elem] = 1
+                        else:
+                            c = False
+        else: 
+            c = False
+        
+        if c == True:
+            print("retângulo inserido com sucesso!")
+            self.area += aux1*aux2
+            print("Área ocupada por fomras na superfície: ",self.area)
+        else:
+            print("Não é possível inserir o retângulo.")
+
+        print(self.superficie)
+
+    def remover_forma(self,ret_a_remover): 
+        lref = int(input("introduza largura do ponto de referência: "))
+        aref = int(input("introduza altura do ponto de referência: "))
+        aux1 = self.dic[ret_a_remover][0]
+        aux2 = self.dic[ret_a_remover][1]
+
+        for elem in range(lref,lref+aux1):
+            for ponto in range(aref,aref+aux2):
+                self.superficie[ponto][elem] = 0
+        print("Forma removida com sucesso.")
+
+
+#        for elem in range(aref,self.dic[ret_a_inserir][0]):
+ #           a = True
+  #          for ponto in range(lref,self.dic[ret_a_inserir][1]):
+   #             if ponto == 1:
+    #                a = False
+     #               print("Não é possível inserir o retângulo.")
+           
+
+
+f = Formas()
+f.criar_superficie(10,10)
+f.criar_retangulo("R1",4,6)
+f.criar_circulo("C1",3)
+f.inserir_forma("R1")
+f.inserir_forma("C1")
