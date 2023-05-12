@@ -198,7 +198,29 @@ class ProteinasShell(Cmd):
 		
     def do_energia(self, arg):    
         " - Comando que imprime a energia da configuração atual caso esta seja válida; este comando pode ser invocado sem argumentos ou com 3 argumentos: ENERGIA e1 e2 e3 \n"
-        pass
+        try:
+            lista_arg = list(arg)
+            num_args = len(lista_arg)
+            energ = 0
+            if num_args == 0:
+                for n in range(0,len(eng.sequencia)-1):
+                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "A":
+                        energ -= 1
+                return print("Energia da sequência: ",energ)
+            elif num_args == 3:
+                for n in range(0,len(eng.sequencia)-1):
+                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "A":    ## nao esta totalmente bem ainda
+                        energ += int(lista_arg[0])
+                    if eng.sequencia[n] == "B" and eng.sequencia[n+1] == "B":
+                        energ += int(lista_arg[1])
+                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "B":
+                        energ += int(lista_arg[2])
+                return print("Energia da sequência: ",energ)
+            else:
+                return("Número de argumentos inválido.")
+            
+        except BaseException as e:
+            print("Erro: ao fazer o ENERGIA:", str(e))
     
 	
     def do_reparar(self, arg):    
