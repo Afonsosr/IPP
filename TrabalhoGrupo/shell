@@ -1,0 +1,257 @@
+# -*- coding:utf-8 -*-
+'''
+Adapted on 01/03/2023
+
+@author: valves
+@author: ferraz
+'''
+
+from cmd import Cmd
+from ProteinasWindow import ProteinasWindow
+from ProteinasEngine import ProteinasEngine
+
+
+class ProteinasShell(Cmd):
+    intro = 'Interpretador de comandos para jogo das proteínas. Escrever help ou ? para listar os comandos disponíveis.\n'
+    prompt = 'Proteínas> '
+                          
+    def do_seq(self, arg):
+        " - Sem argumentos imprime a sequência, se tiver um argumento define a sequência constituída por A's e B's: SEQ sequência \n"
+        try:
+            lista_arg = arg.split()
+            num_args = len(lista_arg)
+            if num_args == 0:
+                sequencia = eng.getseq()
+                print("SEQ: ", sequencia)
+            elif num_args == 1:
+                sequencia = lista_arg[0].upper()  # assim forço a que a string esteja em maiúsculas
+                if eng.seq_valida(sequencia):  # para verificar se a sequência é válida
+                    eng.setseq(sequencia)
+                    print("A sequência foi atualizada")
+                else:
+                    print("A sequência tem carateres inválidos, só é permitido o A e o B")
+            else:
+                print("Número de argumentos inválido!")
+        except BaseException as e:
+            print("Erro: ao executar o comando SEQ:" , str(e))
+    
+                    #print(eng.coordenadas)
+                    #print(eng.coordenadas[0])
+                    #print(eng.coordenadas[0][0])
+                    #eng.coordenadas[0][0] += 1
+                    #print(eng.coordenadas)  
+        
+    def do_dobrar(self, arg):
+        " - Comando que recebe como argumento uma string com instruções (FED) que serão utilizadas para dobrar a sequência: DOBRAR instruções \n"
+        try:
+            lista_arg = list(arg)
+            n = len(lista_arg)
+            #print(lista_arg) #isto depois é pra apagar
+            #print(eng.coordenadas) # isto depois é para apagar
+            
+            if len(lista_arg) != len(eng.sequencia)-1:
+                print("Número de argumentos inválido!")
+            else:
+            
+                auxiliar_de_direcao = "frente"
+                k = 0
+                while k < n-1:    
+                    for elem in lista_arg:
+                       
+                        if auxiliar_de_direcao == "frente" :                                              
+                            if elem == "F":  
+                                                           ########### AS COORDENADAS NÃO ESTÃO A ALTERAR. É PRECISO VER ISSO #############
+                                eng.coordenadas[k+1][0] += 1
+                                auxiliar_de_direcao = "frente"
+                            elif elem == "E":
+                                eng.coordenadas[k+1][1] -= 1
+                                auxiliar_de_direcao = "esquerda"
+                            elif elem == "D":        
+                                eng.coordenadas[k+1][1] += 1
+                                auxiliar_de_direcao = "direita"
+                       
+                        elif auxiliar_de_direcao == "esquerda" : 
+                            if elem == "F":                                             
+                                eng.coordenadas[k+1][1] -= 1
+                                auxiliar_de_direcao = "esquerda"
+                            elif elem == "E":      
+                                eng.coordenadas[k+1][0] -= 1
+                                auxiliar_de_direcao = "tras"
+                            elif elem == "D":                     
+                                eng.coordenadas[k+1][0] += 1
+                                auxiliar_de_direcao = "frente"
+                       
+                        elif auxiliar_de_direcao == "direita" :
+                            if elem == "F":                                                                    
+                                eng.coordenadas[k+1][1] += 1
+                                auxiliar_de_direcao = "direita" 
+                            elif elem == "E":                 
+                                eng.coordenadas[k+1][0] += 1
+                                auxiliar_de_direcao = "frente"
+                            elif elem == "D":                                 
+                                eng.coordenadas[k+1][0] -= 1
+                                auxiliar_de_direcao = "tras"
+
+                        elif auxiliar_de_direcao == "tras" :
+                            if elem == "F":                                                                   
+                                eng.coordenadas[k+1][0] -= 1
+                                auxiliar_de_direcao = "tras"
+                            elif elem == "E":                           
+                                eng.coordenadas[k+1][1] += 1
+                                auxiliar_de_direcao = "direita"
+                            elif elem == "D":                                     
+                                eng.coordenadas[k+1][1] -= 1
+                                auxiliar_de_direcao = "esquerda"
+                    k += 1
+                print(eng.coordenadas)
+                print("As coordenadas foram atualizadas")
+        except BaseException as e:
+            print("Erro: ao fazer o DOBRAR:" , str(e))    
+                
+	
+    def do_coords(self, arg):    
+        " - Sem argumentos imprime as coordenadas de cada caratere da sequência, se tiver um argumento define a posição (X,Y) de cada caratere da sequência: COORDS posições \n"
+        try:    
+            lista_arg = arg.split()
+            num_args = len(lista_arg)
+            if num_args == 0:  # imprimir a lista de coordenadas
+                coordenadas = eng.getcoord()
+                print("COORDENADAS: ", coordenadas)
+            elif num_args == 1:
+                coordenadas = lista_arg[0]
+                if eng.coord_validas(coordenadas):  # para verificar se a string de coordenadas é válida
+                    eng.setcoord(coordenadas)
+                    print("As coordenadas foram atualizadas")
+                else:
+                    print("A string de coordenadas tem carateres inválidos, o formato é (x,y)...")
+            else:
+                print("Número de argumentos inválido!")
+        except BaseException as e:
+            print("Erro: ao fazer o COORDS:", str(e))
+            
+			
+    def do_validar(self, arg):    
+        " - Comando que valida a configuração atual da proteína; este comando deverá imprimir as palavras SIM ou NAO caso a configuração seja válida: VALIDAR \n"
+        try:
+            lista_arg = arg.split()
+            num_args = len(lista_arg)
+            if num_args == 0:
+                if eng.validacao(eng.sequencia,eng.coordenadas) == True:
+                    print("VÁLIDO")
+                else:
+                    print("INVÁLIDO")
+            else:
+                print("O comando validar nao leva argumentos!")
+        except BaseException as e:
+            print("Erro: ao fazer o VALIDAR:", str(e))
+    
+	
+    def do_compactar(self, arg):    
+        " - Comando que deverá imprimir a versão mais compactada possível da sequência: COMPACTAR  \n"
+        try:
+            lista_arg = list(arg)
+            print(lista_arg)
+            num_args = len(lista_arg)
+            if num_args == 0:
+                print("Número de argumentos inválido!")
+            else:
+                comp = lista_arg[0]
+                n = 0
+                for elem in lista_arg[1:]:
+                    for i in range(0,n):
+                        if elem[i] == comp[i]:            #### deve estar tudo mal. fazer de novo ####
+                            comp +=1
+                        else:
+                            comp = comp + elem
+                            n +=1
+                        lista_arg.remove(elem)
+            print(comp)
+        except BaseException as e:
+            print("Erro: ao fazer o COMPACTAR:", str(e))
+
+    
+	
+    def do_gravar(self, arg):    
+        " - Comando invocado com um argumento que será o nome de um ficheiro onde a aplicação deverá armazenar a sequência e as coordenadas: GRAVAR nomef.txt \n"
+        try:
+            fp = open(arg, "w")
+            for e in range(0,len(eng.coordenadas)):
+                fp.write(str(eng.sequencia[e]) + " -> " + str(eng.coordenadas[e]) + ";")
+                fp.write("\n")
+            fp.close()
+            print ("Ficheiro atualizado com sucesso!")
+        except BaseException as e:
+            print("Erro: ao fazer o GRAVAR:", str(e))
+    
+	
+    def do_ler(self, arg):    
+        " - Comando invocado com um argumento que será o nome de um ficheiro de onde a aplicação deverá ler a sequência e as coordenadas: LER nomef.txt \n"
+        try:
+            fp = open(arg, "r")
+            for e in range(0,len(eng.coordenadas)):
+                print("")
+                print(str(eng.sequencia[e]) + " -> " + str(eng.coordenadas[e]) + ";")
+                print("")
+            fp.close()
+        except BaseException as e:
+            print("Erro: ao fazer o LER:", str(e))		
+		
+    def do_energia(self, arg):    
+        " - Comando que imprime a energia da configuração atual caso esta seja válida; este comando pode ser invocado sem argumentos ou com 3 argumentos: ENERGIA e1 e2 e3 \n"
+        pass
+    
+	
+    def do_reparar(self, arg):    
+        " - Comando que deverá reparar uma configuração caso esta seja inválida achando a configuração mais próxima que seja válida: REPARAR \n"
+        pass
+    
+	
+    def do_proclocal(self, arg):    
+        " - Comando que deverá encontrar uma configuração vizinha da configuração atual com energia mais baixa: PROCLOCAL \n"
+        pass
+    
+	
+    def do_procurar(self, arg):    
+        " - Comando que deverá encontrar a melhor configuração possível (i.e., a configuração com energia mais baixa) num espaço de tempo aceitável: PROCURAR \n"
+        pass
+    
+	
+    def do_ver(self, arg):    
+        " - Comando para visualizar graficamente a configuração atual caso seja válida: VER  \n"
+        try:
+            if len(eng.getcoord()) > 0:
+                for linha in eng.get_matriz_total():  # imprimir na consola toda a informação sobre a sequencia
+                    print("%s - (%d,%d)" % (linha[0], linha[1], linha[2]))
+                global janela  # pois pretendo atribuir um valor a um identificador global
+                if janela is not None:  # pretendo criar uma nova janela para a área retangular, por isso é que apago a anterior, se existir.
+                    del janela  # invoca o metodo destruidor de instancia __del__()
+                cell_size = 50  # tamanho da quadricula em pixeis
+                janela = ProteinasWindow(cell_size, eng.max_coord_x(), eng.min_coord_x(), eng.max_coord_y(), eng.min_coord_y()) 
+                janela.mostraJanela(eng)
+            else:
+                print('Atenção: a lista de coordenadas está vazia!')
+        except BaseException as e:
+            print("Erro: ao mostrar a janela com o estado da sequência (gráfica):", str(e))
+        pass
+    
+    def do_sair(self, arg):
+        "Sair do programa Proteínas: sair"
+        print('Obrigado por ter utilizado o Proteínas, espero que tenha sido útil!')
+        return True
+
+
+if __name__ == '__main__':
+    eng = ProteinasEngine()
+    janela = None
+    sh = ProteinasShell()
+    sh.cmdloop()
+    
+	
+'''
+para testar:
+
+> seq BAAABABBBBBA
+> coords (0,0)(1,0)(2,0)(2,-1)(3,-1)(3,0)(3,1)(4,1)(4,2)(3,2)(2,2)(2,1)
+> ver
+
+'''
