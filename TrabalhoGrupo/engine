@@ -1,0 +1,124 @@
+# -*- coding:utf-8 -*-
+'''
+Adapted on 01/03/2023
+
+@author: valves
+@author: ferraz
+'''
+
+class ProteinasEngine:
+    
+    def __init__(self, seq=""):
+        self.sequencia = seq
+        self.coordenadas = []
+        pass
+    
+	
+    def getseq(self):
+        return self.sequencia  
+    
+	
+    def setseq(self, seq):
+        self.sequencia = seq
+        
+		
+    def seq_valida(self, seq_a_verificar):
+        car_validos = "AB"
+        for car in seq_a_verificar:
+            if car not in car_validos:
+                return False
+        return True
+
+
+    def convert_coords_to_list_of_list(self, coords):  # converte string de coordenadas em lista de lista de coordenadas
+        coords = coords.replace(")(", ");(")
+        L = coords.split(";")
+        Lista_coords = []
+        for c in L:
+            li = c.strip("()").split(",")
+            cc = []
+            for t in li:  # para converter todos os valores para números inteiros
+                cc.append(int(t))
+            Lista_coords.append(cc)
+        return Lista_coords
+
+
+    def convert_list_of_list_to_coords(self, lista_coords):  # converte  lista de lista de coordenadas em string
+        coords = ""
+        for c in lista_coords:
+            coords = coords + "(%d,%d)" % (c[0], c[1])
+        return coords
+
+
+    def getcoord(self):  # ter em atenção que as coordenadas são guardadas numa lista de listas
+        return self.convert_list_of_list_to_coords(self.coordenadas)  
+    
+	
+    def setcoord(self, coord):
+        self.coordenadas = self.convert_coords_to_list_of_list(coord)
+        
+		
+    def coord_validas(self, coord_a_verificar):  
+        car_validos = "()0123456789,-[]"
+        for car in coord_a_verificar:
+            if car not in car_validos:
+                return False
+        return True
+
+
+    def max_coord_x(self):  # determina qual o valor maximo de x em todas as coordenadas
+        maximo = 0  # pois a primeira coordenada está sempre na posição (0,0)
+        for c in self.coordenadas: 
+            if c[0] > maximo:
+                maximo = c[0]
+        return maximo
+
+    def min_coord_x(self):  # determina qual o valor maximo de x em todas as coordenadas
+        minimo = 0  # pois a primeira coordenada está sempre na posição (0,0)
+        for c in self.coordenadas: 
+            if c[0] < minimo:
+                minimo = c[0]
+        return minimo
+
+    def max_coord_y(self):  # determina qual o valor maximo de x em todas as coordenadas
+        maximo = 0  # pois a primeira coordenada está sempre na posição (0,0)
+        for c in self.coordenadas: 
+            if c[1] > maximo:
+                maximo = c[1]
+        return maximo
+
+
+    def min_coord_y(self):  # determina qual o valor máximo de x em todas as coordenadas
+        minimo = 0  # pois a primeira coordenada está sempre na posição (0,0)
+        for c in self.coordenadas: 
+            if c[1] < minimo:
+                minimo = c[1]
+        return minimo
+    
+	
+    def get_matriz_total(self):
+        '''
+        retorna uma matriz em que cada linha tem o caratere seguido das coordenadas:
+        [["B",0,0],["A",1,0]...]
+        '''
+        Matriz = []
+        for i in range(len(self.sequencia)):
+            lin = []
+            lin.append(self.sequencia[i])
+            lin.append(self.coordenadas[i][0])
+            lin.append(self.coordenadas[i][1])
+            Matriz.append(lin)
+        return Matriz            
+ 
+    def validacao(self,seq,coords):
+        a = True
+        if ProteinasEngine.seq_valida(self,seq):
+            for coord in coords:
+                if ProteinasEngine.coord_validas(self,str(coord)):
+                    a = True                       
+                else:
+                    a = False
+        else:
+            a = False
+
+        return a
