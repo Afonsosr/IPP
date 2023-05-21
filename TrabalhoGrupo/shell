@@ -9,27 +9,40 @@ Adapted on 01/03/2023
 from cmd import Cmd
 from ProteinasWindow import ProteinasWindow
 from ProteinasEngine import ProteinasEngine
-
+import random
 
 class ProteinasShell(Cmd):
     intro = 'Interpretador de comandos para jogo das proteínas. Escrever help ou ? para listar os comandos disponíveis.\n'
     prompt = 'Proteínas> '
-                          
+
+
+
     def do_seq(self, arg):
         " - Sem argumentos imprime a sequência, se tiver um argumento define a sequência constituída por A's e B's: SEQ sequência \n"
         try:
+            nums=["0","1","2","3","4","5","6","7","8","9"]
+            ax = 0
             lista_arg = arg.split()
             num_args = len(lista_arg)
             if num_args == 0:
                 sequencia = eng.getseq()
                 print("SEQ: ", sequencia)
             elif num_args == 1:
-                sequencia = lista_arg[0].upper()  # assim forço a que a string esteja em maiúsculas
-                if eng.seq_valida(sequencia):  # para verificar se a sequência é válida
-                    eng.setseq(sequencia)
-                    print("A sequência foi atualizada")
+                for elem in nums:
+                    if elem in arg:
+                        ax += 1
+                if ax != 0:
+                    pass
+
+                        
                 else:
-                    print("A sequência tem carateres inválidos, só é permitido o A e o B")
+                    sequencia = lista_arg[0].upper()  # assim forço a que a string esteja em maiúsculas
+                    if eng.seq_valida(sequencia):  # para verificar se a sequência é válida
+                        eng.setseq(sequencia)
+                        print("A sequência foi atualizada")
+                        print("SEQ: ", sequencia)
+                    else:
+                        print("A sequência tem carateres inválidos, só é permitido o A e o B")        
             else:
                 print("Número de argumentos inválido!")
         except BaseException as e:
@@ -44,6 +57,7 @@ class ProteinasShell(Cmd):
     def do_dobrar(self, arg):
         " - Comando que recebe como argumento uma string com instruções (FED) que serão utilizadas para dobrar a sequência: DOBRAR instruções \n"
         try:
+            arg = arg.upper()
             lista_arg = list(arg)
             n = len(lista_arg)
             #print(lista_arg) #isto depois é pra apagar
@@ -52,15 +66,12 @@ class ProteinasShell(Cmd):
             if len(lista_arg) != len(eng.sequencia)-1:
                 print("Número de argumentos inválido!")
             else:
-            
                 auxiliar_de_direcao = "frente"
                 k = 0
-                while k < n-1:    
+                while k <= n-1:    
                     for elem in lista_arg:
-                       
                         if auxiliar_de_direcao == "frente" :                                              
-                            if elem == "F":  
-                                                           ########### AS COORDENADAS NÃO ESTÃO A ALTERAR. É PRECISO VER ISSO #############
+                            if elem == "F":      
                                 eng.coordenadas[k+1][0] += 1
                                 auxiliar_de_direcao = "frente"
                             elif elem == "E":
@@ -103,7 +114,6 @@ class ProteinasShell(Cmd):
                                 eng.coordenadas[k+1][1] -= 1
                                 auxiliar_de_direcao = "esquerda"
                     k += 1
-                print(eng.coordenadas)
                 print("As coordenadas foram atualizadas")
         except BaseException as e:
             print("Erro: ao fazer o DOBRAR:" , str(e))    
@@ -202,20 +212,49 @@ class ProteinasShell(Cmd):
             lista_arg = list(arg)
             num_args = len(lista_arg)
             energ = 0
+            print(num_args)
             if num_args == 0:
-                for n in range(0,len(eng.sequencia)-1):
-                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "A":
-                        energ -= 1
-                return print("Energia da sequência: ",energ)
+                for n in range(1,len(eng.coordenadas)):
+                    a = [eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]+1]
+                    b = [eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]-1]
+                    c = [eng.coordenadas[n-1][0]+1,eng.coordenadas[n-1][1]]
+                    d = [eng.coordenadas[n-1][0]-1,eng.coordenadas[n-1][1]]
+                    lisaux=[a,b,c,d]
+                    for elem in lisaux:
+                        if elem == eng.coordenadas[n]:
+                            lisaux.remove(elem)
+                    
+                    for elem in lisaux:
+                        if elem in eng.coordenadas:
+                            letraAtual = eng.sequencia[n]
+                            letraAux = eng.sequencia[eng.coordenadas.index(elem)]
+                            if letraAtual == letraAux:
+                                if letraAtual == "A": 
+                                    energ -= 1
+                return print("Energia da sequência: ",round(energ/3,0))
             elif num_args == 3:
-                for n in range(0,len(eng.sequencia)-1):
-                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "A":    ## nao esta totalmente bem ainda
-                        energ += int(lista_arg[0])
-                    if eng.sequencia[n] == "B" and eng.sequencia[n+1] == "B":
-                        energ += int(lista_arg[1])
-                    if eng.sequencia[n] == "A" and eng.sequencia[n+1] == "B":
-                        energ += int(lista_arg[2])
-                return print("Energia da sequência: ",energ)
+                for n in range(1,len(eng.coordenadas)):
+                    a = (eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]+1)
+                    b = (eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]-1)
+                    c = (eng.coordenadas[n-1][0]+1,eng.coordenadas[n-1][1])
+                    d = (eng.coordenadas[n-1][0]-1,eng.coordenadas[n-1][1])
+                    lisaux=[a,b,c,d]
+                    for elem in lisaux:
+                        if elem == eng.coordenadas[n]:
+                            lisaux.remove(elem)
+                    for elem in lisaux:
+                        if elem in eng.coordenadas:
+                            letraAtual = eng.sequencia[n]       ############# Esta parte ainda nao está a dar, o de cima ja está ############
+                            letraAux = eng.coordenadas.index(elem)
+                            if letraAtual == letraAux:
+                                if letraAtual == "A": 
+                                    energ += int(lista_arg[0])
+                                else:
+                                    energ += int(lista_arg[1])
+                            else:
+                                energ += int(lista_arg[2])
+
+                return print("Energia da sequência: ",round(energ/3,0))
             else:
                 return("Número de argumentos inválido.")
             
@@ -225,11 +264,26 @@ class ProteinasShell(Cmd):
 	
     def do_reparar(self, arg):    
         " - Comando que deverá reparar uma configuração caso esta seja inválida achando a configuração mais próxima que seja válida: REPARAR \n"
-        pass
+        lista_arg = list(arg)
+        for e in range(0,len(lista_arg)):
+            print(lista_arg[e])
+            if lista_arg[e] not in ["A","B"]:
+                lista_arg[e] = random.choice(['A', 'B'])    # isto repara se a sequência tem letras que não sao A ou B
+        print(lista_arg)        
+        arg = ''                                                        
+        for elem in lista_arg:
+            arg += elem 
+        return print(arg)
+
     
 	
     def do_proclocal(self, arg):    
         " - Comando que deverá encontrar uma configuração vizinha da configuração atual com energia mais baixa: PROCLOCAL \n"
+        ##############################################
+        #ideia: tentar ver se ha algum A na sequencia#
+        #que possa ir para a beira de outro A. Se não#
+        #    houver, ver qual é a melhor solucao.    #
+        ##############################################
         pass
     
 	
