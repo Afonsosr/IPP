@@ -10,12 +10,47 @@ from cmd import Cmd
 from ProteinasWindow import ProteinasWindow
 from ProteinasEngine import ProteinasEngine
 import random
+import re
+from itertools import combinations_with_replacement
+import fontstyle
 
 class ProteinasShell(Cmd):
     intro = 'Interpretador de comandos para jogo das proteínas. Escrever help ou ? para listar os comandos disponíveis.\n'
     prompt = 'Proteínas> '
 
+    def descompactar(arg):
+            nums=["0","1","2","3","4","5","6","7","8","9"]
+            arg = arg.upper()
+            lista_arg = list(arg)
+            num_args = len(lista_arg)        
+            i = 0
+            s = ""
+            urep = ""
+            #for elem in lis
+            while i < num_args -1  :
+                if arg[i+1] in nums and arg[i] != ")":     # funcao para descompactar sequencia descompactada
+                    s = s + arg[i]*int(arg[i+1])
+                    
+                    i += 2
+                elif arg[i] == "(":
+                    while arg[i] != ")":
+                        i += 1
+                        urep = urep + arg[i]
+                        urep = urep.replace(")","")
+                    s = s +  urep*int(arg[i+1])
 
+                    urep = ""
+                    i += 2
+                else:
+                    s = s + arg[i]
+                    i += 1
+            if lista_arg[-1] not in nums:
+                s += lista_arg[-1]
+            return s
+
+
+
+        
 
     def do_seq(self, arg):
         " - Sem argumentos imprime a sequência, se tiver um argumento define a sequência constituída por A's e B's: SEQ sequência \n"
@@ -25,34 +60,30 @@ class ProteinasShell(Cmd):
             lista_arg = arg.split()
             num_args = len(lista_arg)
             if num_args == 0:
-                sequencia = eng.getseq()
-                print("SEQ: ", sequencia)
+                print("SEQ: ", eng.sequencia)
             elif num_args == 1:
                 for elem in nums:
                     if elem in arg:
                         ax += 1
                 if ax != 0:
-                    pass
-
-                        
+                    eng.setseq(ProteinasShell.descompactar(arg))               # descompactar sequencia compactada
+                    print("A sequência foi atualizada")
+                    print("SEQ: ", eng.sequencia)
                 else:
-                    sequencia = lista_arg[0].upper()  # assim forço a que a string esteja em maiúsculas
-                    if eng.seq_valida(sequencia):  # para verificar se a sequência é válida
-                        eng.setseq(sequencia)
+                    seq = lista_arg[0].upper()  # assim forço a que a string esteja em maiúsculas
+                    if eng.seq_valida(seq):  # para verificar se a sequência é válida
+                        eng.setseq(seq)
                         print("A sequência foi atualizada")
-                        print("SEQ: ", sequencia)
+                        print()
                     else:
-                        print("A sequência tem carateres inválidos, só é permitido o A e o B")        
+                        print("A sequência tem carateres inválidos. Por favor, reinsira uma sequência válida.")
             else:
                 print("Número de argumentos inválido!")
         except BaseException as e:
             print("Erro: ao executar o comando SEQ:" , str(e))
-    
-                    #print(eng.coordenadas)
-                    #print(eng.coordenadas[0])
-                    #print(eng.coordenadas[0][0])
-                    #eng.coordenadas[0][0] += 1
-                    #print(eng.coordenadas)  
+
+
+
         
     def do_dobrar(self, arg):
         " - Comando que recebe como argumento uma string com instruções (FED) que serão utilizadas para dobrar a sequência: DOBRAR instruções \n"
@@ -63,9 +94,16 @@ class ProteinasShell(Cmd):
             #print(lista_arg) #isto depois é pra apagar
             #print(eng.coordenadas) # isto depois é para apagar
             
-            if len(lista_arg) != len(eng.sequencia)-1:
-                print("Número de argumentos inválido!")
+            if len(lista_arg) > len(eng.sequencia)-1:
+                print("Número de argumentos inválido! Tem de ser <= a: ",len(eng.sequencia)-1) 
+
             else:
+                if len(lista_arg) == len(eng.sequencia)-1:
+                    pass
+                elif len(lista_arg) < len(eng.sequencia)-1:         # AQUI ASSUMIMOS AS DOBRAR COMO F CASO O ARGUMENTO SEJA MENOR QUE O SUPOSTO
+                    while len(lista_arg) < len(eng.sequencia)-1:    
+                        lista_arg.append("F")
+
                 auxiliar_de_direcao = "frente"
                 k = 0
                 while k <= n-1:    
@@ -115,6 +153,7 @@ class ProteinasShell(Cmd):
                                 auxiliar_de_direcao = "esquerda"
                     k += 1
                 print("As coordenadas foram atualizadas")
+                #return eng.coordenadas
         except BaseException as e:
             print("Erro: ao fazer o DOBRAR:" , str(e))    
                 
@@ -138,48 +177,56 @@ class ProteinasShell(Cmd):
                 print("Número de argumentos inválido!")
         except BaseException as e:
             print("Erro: ao fazer o COORDS:", str(e))
-            
-			
+#################################################################################################           
+
     def do_validar(self, arg):    
-        " - Comando que valida a configuração atual da proteína; este comando deverá imprimir as palavras SIM ou NAO caso a configuração seja válida: VALIDAR \n"
-        try:
-            lista_arg = arg.split()
-            num_args = len(lista_arg)
-            if num_args == 0:
-                if eng.validacao(eng.sequencia,eng.coordenadas) == True:
-                    print("VÁLIDO")
+            " - Comando que valida a configuração atual da proteína; este comando deverá imprimir as palavras SIM ou NAO caso a configuração seja válida: VALIDAR \n"
+            try:
+                lista_arg = arg.split()
+                num_args = len(lista_arg)
+                if num_args == 0:
+                    if eng.validacao(eng.sequencia,eng.coordenadas):
+                        print(fontstyle.apply('SIM', 'Italic'))
+                    else:
+                        print(fontstyle.apply('NAO', 'Italic'))
                 else:
-                    print("INVÁLIDO")
-            else:
-                print("O comando validar nao leva argumentos!")
-        except BaseException as e:
-            print("Erro: ao fazer o VALIDAR:", str(e))
-    
-	
-    def do_compactar(self, arg):    
-        " - Comando que deverá imprimir a versão mais compactada possível da sequência: COMPACTAR  \n"
+                    print("O comando validar nao leva argumentos!")
+            except BaseException as e:
+                print("Erro ao fazer o validar!", str(e))
+
+#################################################################################################   
+
+
+    def do_compactar(self, arg): 
         try:
             lista_arg = list(arg)
-            print(lista_arg)
             num_args = len(lista_arg)
             if num_args == 0:
                 print("Número de argumentos inválido!")
             else:
-                comp = lista_arg[0]
-                n = 0
-                for elem in lista_arg[1:]:
-                    for i in range(0,n):
-                        if elem[i] == comp[i]:            #### deve estar tudo mal. fazer de novo ####
-                            comp +=1
-                        else:
-                            comp = comp + elem
-                            n +=1
-                        lista_arg.remove(elem)
-            print(comp)
+                def repl(m):
+                    opening = m.group(1)
+                    first = m.group(2)
+                    repetitions = m.group(3)
+                    closing = m.group(4)
+                    wrapper_repeat = m.group(5)
+                    repeats = 1 + len(repetitions) // len(first)
+                    if len(first) > 1:
+                        first = '(' + first + ')'                   # encontrado na internet
+                    if opening and wrapper_repeat:
+                        # simplify
+                        repeats = repeats * int(wrapper_repeat)
+                        return first + str(repeats)
+                    return opening + first + str(repeats) + closing + wrapper_repeat
+
+                seq2 = '';
+                while seq2 != arg:
+                    seq2 = arg
+                    arg = re.sub(r'(\(?)([^\d()]+)(\2+)(\)?)(\d*)', repl, seq2)
+            return print(arg)
         except BaseException as e:
             print("Erro: ao fazer o COMPACTAR:", str(e))
 
-    
 	
     def do_gravar(self, arg):    
         " - Comando invocado com um argumento que será o nome de um ficheiro onde a aplicação deverá armazenar a sequência e as coordenadas: GRAVAR nomef.txt \n"
@@ -212,86 +259,187 @@ class ProteinasShell(Cmd):
             lista_arg = list(arg)
             num_args = len(lista_arg)
             energ = 0
-            print(num_args)
+            
             if num_args == 0:
-                for n in range(1,len(eng.coordenadas)):
-                    a = [eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]+1]
-                    b = [eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]-1]
-                    c = [eng.coordenadas[n-1][0]+1,eng.coordenadas[n-1][1]]
-                    d = [eng.coordenadas[n-1][0]-1,eng.coordenadas[n-1][1]]
+                for n in range(0,len(eng.coordenadas)-1):
+                    a = [eng.coordenadas[n][0],eng.coordenadas[n][1]+1]
+                    b = [eng.coordenadas[n][0],eng.coordenadas[n][1]-1]
+                    c = [eng.coordenadas[n][0]+1,eng.coordenadas[n][1]]
+                    d = [eng.coordenadas[n][0]-1,eng.coordenadas[n][1]]
                     lisaux=[a,b,c,d]
-                    for elem in lisaux:
-                        if elem == eng.coordenadas[n]:
-                            lisaux.remove(elem)
-                    
-                    for elem in lisaux:
-                        if elem in eng.coordenadas:
-                            letraAtual = eng.sequencia[n]
-                            letraAux = eng.sequencia[eng.coordenadas.index(elem)]
-                            if letraAtual == letraAux:
-                                if letraAtual == "A": 
-                                    energ -= 1
-                return print("Energia da sequência: ",round(energ/3,0))
+            
+                    if eng.coordenadas[n+1] in lisaux:
+                        lisaux.remove(eng.coordenadas[n+1])
+                        if n > 0 and eng.coordenadas[n-1] in lisaux:
+                            lisaux.remove(eng.coordenadas[n-1])              
+                     
+                        for i in range(0,len(lisaux)):                            
+                            if lisaux[i] in eng.coordenadas:
+                                letraAtual = eng.sequencia[n]
+                                letraAux = eng.sequencia[eng.coordenadas.index(lisaux[i])]
+                                if letraAtual == letraAux:
+                                    if letraAtual == "A" and letraAux == "A" and lisaux[i] == eng.coordenadas[-1]: 
+                                        energ -= 1
+                                    else:
+                                        energ -= 1/2
+                print("Energia da sequência: ",round(energ,0))
+                return energ
             elif num_args == 3:
-                for n in range(1,len(eng.coordenadas)):
-                    a = (eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]+1)
-                    b = (eng.coordenadas[n-1][0],eng.coordenadas[n-1][1]-1)
-                    c = (eng.coordenadas[n-1][0]+1,eng.coordenadas[n-1][1])
-                    d = (eng.coordenadas[n-1][0]-1,eng.coordenadas[n-1][1])
+                for n in range(0,len(eng.coordenadas)-1):
+                    a = [eng.coordenadas[n][0],eng.coordenadas[n][1]+1]
+                    b = [eng.coordenadas[n][0],eng.coordenadas[n][1]-1]
+                    c = [eng.coordenadas[n][0]+1,eng.coordenadas[n][1]]
+                    d = [eng.coordenadas[n][0]-1,eng.coordenadas[n][1]]
                     lisaux=[a,b,c,d]
-                    for elem in lisaux:
-                        if elem == eng.coordenadas[n]:
-                            lisaux.remove(elem)
-                    for elem in lisaux:
-                        if elem in eng.coordenadas:
-                            letraAtual = eng.sequencia[n]       ############# Esta parte ainda nao está a dar, o de cima ja está ############
-                            letraAux = eng.coordenadas.index(elem)
-                            if letraAtual == letraAux:
-                                if letraAtual == "A": 
-                                    energ += int(lista_arg[0])
+            
+                    if eng.coordenadas[n+1] in lisaux:
+                        lisaux.remove(eng.coordenadas[n+1])
+                        if n > 0 and eng.coordenadas[n-1] in lisaux:
+                            lisaux.remove(eng.coordenadas[n-1])              
+                        for i in range(0,len(lisaux)):                            
+                            if lisaux[i] in eng.coordenadas:               
+                                letraAtual = eng.sequencia[n]
+                                letraAux = eng.sequencia[eng.coordenadas.index(lisaux[i])]
+                                if letraAtual == letraAux:
+                                    if letraAtual == "A" and letraAux == "A" and lisaux[i] == eng.coordenadas[-1]: 
+                                        energ += int(lista_arg[0]) 
+                                    elif letraAtual == "A" and letraAux == "A" and lisaux[i] != eng.coordenadas[-1]:
+                                        energ += int(lista_arg[0])/2
+                                    elif letraAtual == "B" and letraAux == "B" and lisaux[i] == eng.coordenadas[-1]: 
+                                        energ += int(lista_arg[1]) 
+                                    elif letraAtual == "B" and letraAux == "B" and lisaux[i] != eng.coordenadas[-1]:
+                                        energ += int(lista_arg[1])/2
+                                elif letraAtual != letraAux and lisaux[i] == eng.coordenadas[-1]: 
+                                        energ += int(lista_arg[2])
                                 else:
-                                    energ += int(lista_arg[1])
-                            else:
-                                energ += int(lista_arg[2])
-
-                return print("Energia da sequência: ",round(energ/3,0))
+                                    energ += int(lista_arg[2])/2                 
+                print("Energia da sequência: ",round(energ,0))
+                return energ
+                
             else:
                 return("Número de argumentos inválido.")
             
         except BaseException as e:
             print("Erro: ao fazer o ENERGIA:", str(e))
     
-	
+#################################################################################################        	
     def do_reparar(self, arg):    
         " - Comando que deverá reparar uma configuração caso esta seja inválida achando a configuração mais próxima que seja válida: REPARAR \n"
-        lista_arg = list(arg)
-        for e in range(0,len(lista_arg)):
-            print(lista_arg[e])
-            if lista_arg[e] not in ["A","B"]:
-                lista_arg[e] = random.choice(['A', 'B'])    # isto repara se a sequência tem letras que não sao A ou B
-        print(lista_arg)        
-        arg = ''                                                        
-        for elem in lista_arg:
-            arg += elem 
-        return print(arg)
 
-    
+        try:  
+
+            lista_arg = list(eng.sequencia)
+                                                                        ##########################
+# AGORA PRA REPARAR AS COORDENADAS                                      # arranjar algo por aqui #
+            i = 0                                                       ##########################
+            n = 0
+            listaOriginal = eng.coordenadas
+            while n < len(listaOriginal):                    # dá para ir adicionando aqui ao len valores?
+                a = [listaOriginal[n][0],listaOriginal[n][1]+1]    #  ver o que está mal
+                b = [listaOriginal[n][0],listaOriginal[n][1]-1]
+                c = [listaOriginal[n][0]+1,listaOriginal[n][1]]     
+                d = [listaOriginal[n][0]-1,listaOriginal[n][1]]
+                lisaux=[a,b,c,d] 
+                if n < len(listaOriginal)-1:
+                    if listaOriginal[n+1] not in lisaux:
+                        if listaOriginal[n+1][1] > listaOriginal[n][1] and listaOriginal[n+1][1] - listaOriginal[n][1] > 1: 
+                            novaCoord=[listaOriginal[n+1][0],(listaOriginal[n+1][1])-1]
+                            while novaCoord[1] != listaOriginal[n][1]:
+                                eng.coordenadas.append(novaCoord)
+                                i += 1
+                                novaCoord=[novaCoord[0],novaCoord[1]-1]
+                        
+                        if listaOriginal[n+1][1] < listaOriginal[n][1] and abs(listaOriginal[n][1]) - abs(listaOriginal[n-1][1])>1:
+                            novaCoord=[listaOriginal[n+1][0],listaOriginal[n+1][1]+1]
+                            while novaCoord[1] != listaOriginal[n][1]:
+                                eng.coordenadas.append(novaCoord)    
+                                i += 1
+                                novaCoord=[novaCoord[0],novaCoord[1]+1]
+
+                        if listaOriginal[n+1][0] > listaOriginal[n][0] and listaOriginal[n+1][0] - listaOriginal[n][0]>1:
+                            novaCoord=[listaOriginal[n+1][0]-1,listaOriginal[n+1][1]]
+                            while novaCoord[0] != listaOriginal[n][0]:
+                                eng.coordenadas.append(novaCoord)
+                                i += 1
+                                novaCoord=[novaCoord[0]-1,novaCoord[1]]
+                            print(listaOriginal)
+                        if listaOriginal[n+1][0] < listaOriginal[n][0] and abs(listaOriginal[n][0]) - abs(listaOriginal[n+1][0])>1:
+                            novaCoord=[listaOriginal[n+1][0]+1,listaOriginal[n+1][1]]
+                            while novaCoord[0] != listaOriginal[n][0]:
+                                eng.coordenadas.append(novaCoord)                   
+                                i += 1                                              
+                                novaCoord=[novaCoord[0]+1,novaCoord[1]]             
+                n += 1
+
+                lista_sem_repeticoes = list(set(tuple(sublista) for sublista in eng.coordenadas))
+                eng.coordenadas = [list(sublista) for sublista in lista_sem_repeticoes]            
+                eng.coordenadas = sorted(eng.coordenadas, key=lambda k: [k[0], k[1]])
+                
+                # ver quantas letras faltam para len(coordenadas)==len(sequencia) e só depois adicionar em random esse nº de letras
+                while i > 0:
+                    lista_arg.append(random.choice(['A', 'B']))
+                    i-=1     
+                s= ''.join(lista_arg) 
+                while len(eng.coordenadas) != len(list(s)):
+                    s = s.rstrip(s[-1])
+
+                eng.setseq(s)
+                                     
+            # atribuir ao eng.sequencia a sequencia nova com as letras adicionadas
+            print(eng.sequencia),print(eng.coordenadas)
+        
+        except BaseException as e:
+            print("Erro: ao fazer o REPARAR:", str(e))
+
+#################################################################################################            
 	
-    def do_proclocal(self, arg):    
+    def do_proclocal(self,arg):    
         " - Comando que deverá encontrar uma configuração vizinha da configuração atual com energia mais baixa: PROCLOCAL \n"
         ##############################################
         #ideia: tentar ver se ha algum A na sequencia#
         #que possa ir para a beira de outro A. Se não#
         #    houver, ver qual é a melhor solucao.    #
         ##############################################
-        pass
-    
+        try:  
+            lista_arg = list(arg)
+            num_args = len(lista_arg)
+            if num_args == 0:
+                a = int(self.do_energia(arg))
+                b = 1000000
+                while b >= a: 
+                    dob = []
+                    for i in range(0,len(eng.coordenadas)-1):  
+                        dob.append(random.choice(['D','F','E']))
+                    dob_str = ''.join(dob)
+                    self.do_dobrar(dob_str)
+                    b = self.do_energia(arg)
+                    
+            
+
+        except BaseException as e:
+            print("Erro: ao fazer o PROLOCAL:", str(e))
+	
+ #################################################################################################           
 	
     def do_procurar(self, arg):    
         " - Comando que deverá encontrar a melhor configuração possível (i.e., a configuração com energia mais baixa) num espaço de tempo aceitável: PROCURAR \n"
-        pass
-    
-	
+        try:    
+            lista_arg = list(arg)
+            num_args = len(lista_arg)
+            if num_args == 0:
+
+                a = eng.coordenadas
+                b = int(self.do_energia(""))
+                for elem in comb:
+                    self.do_dobrar(elem)
+                    if int(self.do_energia("")) < b :
+                        self.do_dobrar(elem)
+            print("Configuração de energia mínima: ",eng.coordenadas)
+        except BaseException as e:
+            print("Erro: ao fazer o PROCURAR:", str(e))
+#################################################################################################        	
+
+
     def do_ver(self, arg):    
         " - Comando para visualizar graficamente a configuração atual caso seja válida: VER  \n"
         try:
