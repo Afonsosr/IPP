@@ -7,7 +7,10 @@ Adapted on 01/03/2023
 '''
 
 class ProteinasEngine:
-    
+    aa = -1
+    ab = 0
+    bb = 0
+
     def __init__(self, seq=""):
         self.sequencia = seq
         self.coordenadas = []
@@ -28,8 +31,8 @@ class ProteinasEngine:
                 for caractere in frase:
                     if caractere == '('or caractere == ')':
                         pilha.append(caractere)
-                        if caractere == '(':                    # funcao que verifica os parentises de uma sequencia
-                            a += 1                                   
+                        if caractere == '(':                    # funcao que verifica os parenteses de uma sequencia 
+                            a += 1                              
                         else:
                             b += 1
                 if len(pilha)==0:
@@ -46,7 +49,7 @@ class ProteinasEngine:
             return False
         if str(list(seq_a_verificar)[0]) in num:
             return False
-        for car in seq_a_verificar:
+        for car in seq_a_verificar:    # aqui verifica se o 1º caracter da seq é um numero e se todos os caracteres da seq sao validos
             if car not in car_validos:            
                 return False
         for i in range(0,len(list(seq_a_verificar))-1):
@@ -93,20 +96,35 @@ class ProteinasEngine:
                 return False
         return True
 
-    def coords_totais_seguidas(self,coordsTodas):
+    def coords_totais_seguidas(coordsTodas):
         f = 0
         for i in range(0,len(coordsTodas)-1):
             a = [coordsTodas[i][0],coordsTodas[i][1]+1]
             b = [coordsTodas[i][0],coordsTodas[i][1]-1]
             c = [coordsTodas[i][0]+1,coordsTodas[i][1]]
             d = [coordsTodas[i][0]-1,coordsTodas[i][1]]
-            lisaux=[a,b,c,d]            
+            lisaux=[a,b,c,d]                                 #funcao que verifica se as coordenadas sao todas adjacentes
+
             if coordsTodas[i+1] in lisaux:
                 f += 1
-        if f != 0:
-            return True
-        else:
-            return False        
+            if f != 0:
+        
+                f = 0
+            else:
+                return False
+            
+        return True
+
+
+    def coords_repetidas(self,coordsTodas):
+        laux=coordsTodas[:]                        # verificar se ha coordenadas iguais
+        for i in range(0,len(coordsTodas)):
+            a = coordsTodas[i]
+            laux.remove(a)
+            if a in laux:
+                return False
+        return True
+
 
     def max_coord_x(self):  # determina qual o valor maximo de x em todas as coordenadas
         maximo = 0  # pois a primeira coordenada está sempre na posição (0,0)
@@ -155,12 +173,203 @@ class ProteinasEngine:
 
 
 
-    def validacao(self,seq,coords):
+    def validacao(self,seq,coords):  # funcao que valida a sequencia e as coordenadas
         
         if ProteinasEngine.seq_valida(self,seq) and ProteinasEngine.verificar_parenteses(self,seq):
             for coord in coords:
-                if ProteinasEngine.coord_validas(self,str(coord)) and ProteinasEngine.coords_totais_seguidas(self,coords):
+                if ProteinasEngine.coord_validas(self,str(coord)) and ProteinasEngine.coords_totais_seguidas(self,coords) and ProteinasEngine.coords_repetidas(self,coords):
                     return True
         return False
+    
+###############################################
+    def generate_strings(self, length, prefix=''):      #gera todas as combinações possiveis de instruções de dobragem
+        if length == 0:
+            yield prefix
+        else:
+            for char in ["F", "E", "D"]:
+                yield from self.generate_strings(length - 1, prefix + char)
+
+
+    def procura(self, seq, e1, e2, e3):
+        dobras = self.generate_strings(len(seq) - 1)        #gera as strings
+        
+        res = self.dobrar(next(dobras),"")     #atribui o valor inicial à primeira configuração
+        energia = self.calcula_energia(seq, res, e1, e2, e3)
+        
+        for d in dobras:
+            dobra_nova = self.dobrar(d,"")    #cria todas as configurações possiveis
+            energia_nova = self.calcula_energia(seq, dobra_nova, e1, e2, e3)    #calcula as suas energias
+            if energia_nova < energia and self.validar(seq, dobra_nova):        #seleciona o valor de menor energia
+                energia = energia_nova
+                res = dobra_nova
+                
+        return res, energia
+
+    def determina_tipo(self, t1, t2):    #determina tipo da ligacao
+            if t1 == "A" and t1 == t2:  #ligação tipo 1
+                return 0    #indice da lista n
+            if t1 == "B" and t1 == t2:  #ligação do tipo 2
+                return 1
+            if t1 != t2:    #ligação do tipo 3
+                return 2
+
+
+    def calcula_energia(self, seq, coords, e1 = -1, e2 = 0, e3 = 0):
+        n = [0, 0, 0]
+        i = 0
+        while i < len(coords) - 2:
+            x, y = coords[i]
+            c = i + 2   #verifica apenas posições para a frente (não repetidas) e ignora a seguinte pois existe ligação
+            while c < len(coords):
+                if (coords[c][0] == x and coords[c][1] in [y-1, y+1]) or (coords[c][1] == y and coords[c][0] in [x-1, x+1]):
+                    n[self.determina_tipo(seq[i], seq[c])] += 1   
+                c += 1
+            i += 1
+
+        return e1 * n[0] + e2 * n[1] + e3 * n[2]
+
+    
+
+###################################################################3
+
+    def energia(self,coordsT,arg):    
+            " - Comando que imprime a energia da configuração atual caso esta seja válida; este comando pode ser invocado sem argumentos ou com 3 argumentos: ENERGIA e1 e2 e3 \n"
+            try:
+                lista_arg = list(arg)
+                num_args = len(lista_arg)
+                energ = 0
+                
+                if num_args == 0:
+                    for n in range(0,len(coordsT)-1):
+                        a = [coordsT[n][0],coordsT[n][1]+1]         #funcao onde é calculada a energia
+                        b = [coordsT[n][0],coordsT[n][1]-1]
+                        c = [coordsT[n][0]+1,coordsT[n][1]]
+                        d = [coordsT[n][0]-1,coordsT[n][1]]
+                        lisaux=[a,b,c,d]
+                
+                        if coordsT[n+1] in lisaux:
+                            lisaux.remove(coordsT[n+1])
+                            if n > 0 and coordsT[n-1] in lisaux:
+                                lisaux.remove(coordsT[n-1])              #vemos aqui quais sao os pontos adjacentes a determinado ponto, mas que nao estao ligados a este, ou seja, sobre os quais podemos calcular a energia
+                        
+                            for i in range(0,len(lisaux)):                            
+                                if lisaux[i] in coordsT:
+                                    letraAtual = self.sequencia[n]
+                                    letraAux = self.sequencia[coordsT.index(lisaux[i])]
+                                    if letraAtual == letraAux:
+                                        if letraAtual == "A" and letraAux == "A" and lisaux[i] == coordsT[-1]: 
+                                            energ -= 1
+                                        else:
+                                            energ -= 1/2
+                    print("Energia da sequência: ",round(energ,0))
+                    return energ
+                elif num_args == 3:
+                    for n in range(0,len(coordsT)-1):
+                        a = [coordsT[n][0],coordsT[n][1]+1]
+                        b = [coordsT[n][0],coordsT[n][1]-1]
+                        c = [coordsT[n][0]+1,coordsT[n][1]]
+                        d = [coordsT[n][0]-1,coordsT[n][1]]
+                        lisaux=[a,b,c,d]
+                
+                        if coordsT[n+1] in lisaux:
+                            lisaux.remove(coordsT[n+1])
+                            if n > 0 and coordsT[n-1] in lisaux:
+                                lisaux.remove(coordsT[n-1])              
+                            for i in range(0,len(lisaux)):                            
+                                if lisaux[i] in coordsT:               
+                                    letraAtual = self.sequencia[n]
+                                    letraAux = self.sequencia[coordsT.index(lisaux[i])]
+                                    if letraAtual == letraAux:
+                                        if letraAtual == "A" and letraAux == "A" and lisaux[i] == coordsT[-1]: 
+                                            energ += int(lista_arg[0]) 
+                                        elif letraAtual == "A" and letraAux == "A" and lisaux[i] != coordsT[-1]:     #aqui calcula se a energia. ha casos em que é energia/2, porque como a iteracao passa 
+                                                                                                                    # ao todo 2x nos 2 pontos, temos que dividir essas vezes por 2, senao ficamos com a energia mal contabilizada
+                                            energ += int(lista_arg[0])/2
+                                        elif letraAtual == "B" and letraAux == "B" and lisaux[i] == coordsT[-1]: 
+                                            energ += int(lista_arg[1]) 
+                                        elif letraAtual == "B" and letraAux == "B" and lisaux[i] != coordsT[-1]:
+                                            energ += int(lista_arg[1])/2
+                                    elif letraAtual != letraAux and lisaux[i] == coordsT[-1]: 
+                                            energ += int(lista_arg[2])
+                                    else:
+                                        energ += int(lista_arg[2])/2                 
+                    print("Energia da sequência: ",round(energ,0))
+                    return energ
+                    
+                else:
+                    print("Número de argumentos inválido.")
+                
+            except BaseException as e:
+                print("Erro: ao fazer o ENERGIA:", str(e))
+
+
+    def dobrar(self,coordsT, arg):
+        " - Comando que recebe como argumento uma string com instruções (FED) que serão utilizadas para dobrar a sequência: DOBRAR instruções \n"
+
+        arg = arg.upper()
+        lista_arg = list(arg)
+        n = len(lista_arg)
+
+        
+        if len(lista_arg) > len(self.sequencia)-1:
+            print("Número de argumentos inválido! Tem de ser <= a: ",len(self.sequencia)-1) 
+
+        else:
+            if len(lista_arg) == len(self.sequencia)-1:
+                pass
+            elif len(lista_arg) < len(self.sequencia)-1:         # AQUI ASSUMIMOS AS DOBRAR COMO F CASO O ARGUMENTO SEJA MENOR QUE O SUPOSTO
+                while len(lista_arg) < len(self.sequencia)-1:    
+                    lista_arg.append("F")
+
+            auxiliar_de_direcao = "frente"
+            k = 0
+            while k <= n-1:    
+                for elem in lista_arg:
+                    if auxiliar_de_direcao == "frente" :                                              
+                        if elem == "F":      
+                            coordsT[k+1][0] += 1
+                            auxiliar_de_direcao = "frente"
+                        elif elem == "E":
+                            coordsT[k+1][1] -= 1
+                            auxiliar_de_direcao = "esquerda"
+                        elif elem == "D":        
+                            coordsT[k+1][1] += 1
+                            auxiliar_de_direcao = "direita"
+                                                                 # vamos adicinando as coordenadas os valores correspondentes às dobragens
+                    elif auxiliar_de_direcao == "esquerda" :     # e vamos trabalhando com o auxiliar de direcao para saber para que lado será o proximo passo da nossa dobragem
+                        if elem == "F":                                             
+                            coordsT[k+1][1] -= 1
+                            auxiliar_de_direcao = "esquerda"
+                        elif elem == "E":      
+                            coordsT[k+1][0] -= 1
+                            auxiliar_de_direcao = "tras"
+                        elif elem == "D":                     
+                            coordsT[k+1][0] += 1
+                            auxiliar_de_direcao = "frente"
+                
+                    elif auxiliar_de_direcao == "direita" :
+                        if elem == "F":                                                                    
+                            coordsT[k+1][1] += 1
+                            auxiliar_de_direcao = "direita" 
+                        elif elem == "E":                 
+                            coordsT[k+1][0] += 1
+                            auxiliar_de_direcao = "frente"
+                        elif elem == "D":                                 
+                            coordsT[k+1][0] -= 1
+                            auxiliar_de_direcao = "tras"
+
+                    elif auxiliar_de_direcao == "tras" :
+                        if elem == "F":                                                                   
+                            coordsT[k+1][0] -= 1
+                            auxiliar_de_direcao = "tras"
+                        elif elem == "E":                           
+                            coordsT[k+1][1] += 1
+                            auxiliar_de_direcao = "direita"
+                        elif elem == "D":                                     
+                            coordsT[k+1][1] -= 1
+                            auxiliar_de_direcao = "esquerda"
+                k += 1
+        return self.coordenadas
+    
     
 
